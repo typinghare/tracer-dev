@@ -10,7 +10,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const decorator_1 = require("../../../lib/decorator");
-let Find = class Find {
+let Find = class Find extends Tracer.Service {
     main(keys) { }
     $keys() { }
     update() { }

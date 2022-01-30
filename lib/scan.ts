@@ -1,9 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Metadata } from './metadata';
 import { getParamNameList } from './misc';
-import { Any } from './type';
-import { CompletionInfo } from './decorator';
+import { Metadata, CompletionInfo } from './decorator';
 
 export module Scan {
   /**

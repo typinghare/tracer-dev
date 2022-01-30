@@ -1,5 +1,131 @@
 import { Scan } from './scan';
-import { Metadata } from './metadata';
+import 'reflect-metadata';
+
+type Key = string | symbol;
+
+export module Metadata {
+  /**
+   * Gets the metadata value for the provided metadata key on the target object or its prototype chain.
+   * @param key metadata key
+   * @param target
+   * @param propertyKey
+   */
+  export function get(key: Key, target: Object, propertyKey?: Key) {
+    return propertyKey ?
+      Reflect.getMetadata(key, target, propertyKey) :
+      Reflect.getMetadata(key, target);
+  }
+
+  /**
+   * Define a unique metadata entry on the target.
+   * @param key metadata key
+   * @param value
+   * @param target
+   * @param propertyKey
+   */
+  export function set(key: Key, value: any, target: Object, propertyKey?: Key) {
+    propertyKey
+      ? Reflect.defineMetadata(key, value, target, propertyKey)
+      : Reflect.defineMetadata(key, value, target);
+  }
+
+  /**
+   * Deletes the metadata entry from the target object with the provided key.
+   * @param key
+   * @param value
+   * @param target
+   * @param propertyKey
+   */
+  export function remove(key: Key, value: any, target: Object, propertyKey?: Key) {
+    propertyKey ?
+      Reflect.deleteMetadata(key, target, propertyKey) :
+      Reflect.deleteMetadata(key, target);
+  }
+
+  /**
+   * Push a value to a metadata list. Automatically create list if metadata not found.
+   * @param key metadata key
+   * @param value
+   * @param target
+   * @param propertyKey
+   */
+  export function push(key: Key, value: any, target: Object, propertyKey?: Key) {
+    const list = get(key, target, propertyKey) || [];
+    if (!Array.isArray(list)) return;
+    list.push(value);
+    set(key, list, target, propertyKey);
+  }
+}
+
+export module Metadata2 {
+  class ClassMetadata {
+    private readonly _constructor: Function;
+
+    public constructor(target: Object) {
+      this._constructor = typeof target == 'function' ? target : target.constructor;
+    }
+
+    public get(key: Key): any {
+      return Reflect.getMetadata(key, this._constructor);
+    }
+
+    public set(key: Key, value: any) {
+      Reflect.defineMetadata(key, value, this._constructor);
+    }
+
+    public method(methodName: string): MethodMetaData {
+      return new MethodMetaData(this._constructor, methodName);
+    }
+
+    public getProperty(property: string, key: Key): any {
+      Reflect.getMetadata(key, this._constructor, property);
+    }
+
+    public setProperty(property: string, key: Key, value: any) {
+      Reflect.defineMetadata(key, value, this._constructor, property);
+    }
+  }
+
+  class MethodMetaData {
+    private static readonly _SYMBOL: symbol = Symbol('param');
+
+    private readonly _constructor: Function;
+    private readonly _methodName: string;
+
+    public constructor(target: Function, methodName: string) {
+      this._constructor = target;
+      this._methodName = methodName;
+    }
+
+    public get(key: Key): any {
+      return Reflect.getMetadata(key, this._constructor, this._methodName);
+    }
+
+    public set(key: Key, value: any) {
+      Reflect.defineMetadata(key, value, this._constructor, this._methodName);
+    }
+
+    public setParam(index: number, key: string, value: string) {
+      const paramList = Reflect.getMetadata(MethodMetaData._SYMBOL, this._constructor, this._methodName) || [];
+      const param = paramList[index] || {};
+      param[key] = value;
+      paramList[index] = param;
+      Reflect.defineMetadata(MethodMetaData._SYMBOL, this._constructor, this._methodName);
+    }
+
+    public getParamList(): Array<object> {
+      return Reflect.getMetadata(MethodMetaData._SYMBOL, this._constructor, this._methodName) || [];
+    }
+
+    public getParam(index: number): object {
+      return this.getParamList()[index];
+    }
+  }
+
+  export function of(constructor: Object) {
+    return new ClassMetadata(constructor);
+  }
+}
 
 /**
  * Class decorator.
@@ -27,6 +153,7 @@ export function Execute(): (
   return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     // Metadata set execute function
     Metadata.set('ExecuteFunction', descriptor.value, target.constructor);
+    Metadata2.of(target).method(target).set('ExecuteFunction', descriptor.value);
   };
 }
 

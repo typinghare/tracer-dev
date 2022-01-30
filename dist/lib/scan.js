@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Scan = void 0;
 const fs = require("fs");
 const path = require("path");
-const metadata_1 = require("./metadata");
 const misc_1 = require("./misc");
+const decorator_1 = require("./decorator");
 var Scan;
 (function (Scan) {
     class Param {
@@ -132,26 +132,28 @@ var Scan;
             const constructor = this._tempServiceConstructor;
             const serviceName = this._tempServiceName;
             const service = this.getTempServant().getService(serviceName);
-            const executeFunction = service.executeFunction = metadata_1.Metadata.get('ExecuteFunction', constructor);
-            service.returnIntro = metadata_1.Metadata.get('returnIntro', constructor, executeFunction.name);
+            const executeFunction = service.executeFunction = decorator_1.Metadata.get('ExecuteFunction', constructor);
+            service.returnIntro = decorator_1.Metadata.get('returnIntro', constructor, executeFunction.name);
+            const returnType = decorator_1.Metadata.get('returnType', constructor, executeFunction.name);
+            service.returnType = Array.isArray(returnType) ? returnType : [returnType];
             this._assembleParams(service, executeFunction, constructor);
-            const completion = metadata_1.Metadata.get('completion', constructor, executeFunction.name);
-            const optionList = metadata_1.Metadata.get('optionList', constructor);
+            const completion = decorator_1.Metadata.get('completion', constructor, executeFunction.name);
+            const optionList = decorator_1.Metadata.get('optionList', constructor);
             if (optionList) {
                 for (const option of optionList) {
                     this._assembleParams(option, option.executeFunction, constructor);
-                    const completion = metadata_1.Metadata.get('completion', constructor, option.executeFunction.name);
+                    const completion = decorator_1.Metadata.get('completion', constructor, option.executeFunction.name);
                     service.addOption(option);
                 }
             }
         }
         _assembleParams(handle, executeFunction, constructor) {
             const executeFunctionName = executeFunction.name;
-            const paramList = metadata_1.Metadata.get('paramList', constructor, executeFunctionName);
+            const paramList = decorator_1.Metadata.get('paramList', constructor, executeFunctionName);
             if (!paramList)
                 return;
             const paramNameList = (0, misc_1.getParamNameList)(executeFunction);
-            const requiredParamIndexList = metadata_1.Metadata.get('requiredParamIndexList', constructor, executeFunctionName);
+            const requiredParamIndexList = decorator_1.Metadata.get('requiredParamIndexList', constructor, executeFunctionName);
             for (let i = 0; i < paramNameList.length; ++i) {
                 const name = paramNameList[i];
                 const param = paramList.find(param => param.name == name);

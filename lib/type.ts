@@ -31,7 +31,7 @@ export class TypeParser {
     // parse list
     this._parseFunctionList.push((literal: string) => {
       if (literal[0] != '[') return;
-      const literalList: Array<string> = literal.split(/,/).map(String.prototype.trim);
+      const literalList: Array<string> = literal.split(/,/);
       const list: Array<Any> = literalList.map(literal => this.parse(literal));
       return new List(list);
     });

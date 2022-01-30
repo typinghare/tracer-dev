@@ -8,9 +8,10 @@ import {
   Service,
   Return
 } from '../../../lib/decorator';
+import { Tracer } from '../../../lib/tracer';
 
 @Service('find')
-class Find {
+class Find extends Tracer.Service {
   @Execute()
   @Return('List<Obj<K, V>>', 'Find memos.')
   @Param('keys', ['Str', 'List<Str>'], 'Key words of memo.')
